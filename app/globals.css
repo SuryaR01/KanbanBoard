@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Default theme colors (Light) - will be overridden by ThemeContext */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-background: #f0f9ff;
+  --color-backgroundGradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  --color-surface: #ffffff;
+  --color-text: #18212d;
+  --color-textSecondary: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #10b981;
+
+  /* Column colors for Kanban */
+  --color-columnColors-0: #f3f4f6;
+  --color-columnColors-1: #e5e7eb;
+  --color-columnColors-2: #d1d5db;
+  --color-columnColors-3: #9ca3af;
+  --color-columnColors-4: #6b7280;
+
+  /* Dotted background color */
+  --color-dotPattern: #d1d5db;
+
+  --background: var(--color-background);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
@@ -12,15 +33,28 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-backgroundGradient, var(--color-background));
+  background-attachment: fixed;
+  color: var(--color-text);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+.dotted-bg {
+  background-image: radial-gradient(var(--color-dotPattern) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.kanban-header {
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  letter-spacing: 2px;
+}
+
+.task-shadow {
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.1);
 }
