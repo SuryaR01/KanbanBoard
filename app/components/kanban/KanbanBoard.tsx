@@ -52,6 +52,11 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
 
+    // Board members state
+    const [boardMembers, setBoardMembers] = useState<any[]>([]);
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+    const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -71,13 +76,80 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                 if (data.user) setCurrentUser(data.user);
             })
             .catch(err => console.error("Failed to fetch user profile", err));
+
+        // Fetch user list (for adding new members)
+        fetch('/api/users')
+            .then(res => res.json())
+            .then(data => {
+                if (data.users) setAllUsers(data.users);
+            })
+            .catch(err => console.error("Failed to fetch all users", err));
     }, []);
 
     useEffect(() => {
-        if (boardId && currentUser) {
+        if (boardId) {
             fetchData();
+            fetchMembers();
         }
-    }, [boardId, currentUser]);
+    }, [boardId]);
+
+    const fetchMembers = async () => {
+        try {
+            const res = await fetch(`/api/boards/${boardId}/members`);
+            if (res.ok) {
+                const data = await res.json();
+                setBoardMembers(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch members", error);
+        }
+    };
+
+    const handleAddMember = async (userId: string) => {
+        try {
+            const res = await fetch(`/api/boards/${boardId}/members`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (res.ok) {
+                const newMember = await res.json();
+                if (newMember.message) {
+                    toast(newMember.message);
+                } else {
+                    setBoardMembers([...boardMembers, newMember]);
+                    toast.success('Member added to board');
+                    setIsAddMemberOpen(false);
+                }
+            } else {
+                toast.error('Failed to add member');
+            }
+        } catch (error) {
+            toast.error('Failed to add member');
+        }
+    };
+
+    const handleRemoveMember = async (userId: string) => {
+        if (!confirm("Are you sure you want to remove this member?")) return;
+
+        try {
+            const res = await fetch(`/api/boards/${boardId}/members`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (res.ok) {
+                setBoardMembers(boardMembers.filter(m => m.id !== userId));
+                toast.success('Member removed');
+            } else {
+                toast.error('Failed to remove member');
+            }
+        } catch (error) {
+            toast.error('Failed to remove member');
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -93,26 +165,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
                 setColumns(colsData);
 
-                // Filter projects where current user is a member
-                if (currentUser) {
-                    const filteredProjects = tasksData.filter(project => {
-                        try {
-                            const members = typeof project.members === 'string'
-                                ? JSON.parse(project.members)
-                                : project.members || [];
-
-                            return members.some((m: any) => {
-                                if (typeof m === 'string') return m === currentUser.name;
-                                return m.id === currentUser.id || m.name === currentUser.name;
-                            });
-                        } catch (e) {
-                            return false;
-                        }
-                    });
-                    setProjects(filteredProjects);
-                } else {
-                    setProjects([]); // Or show all? User requirements say "not their in project, no need to show"
-                }
+                setProjects(tasksData);
 
 
             } else {
@@ -348,61 +401,139 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     if (isLoading) return <div className="p-10 text-center font-bold" style={{ color: 'var(--color-text)' }}>Loading Board...</div>;
 
+    const notMemberUsers = allUsers.filter(u => !boardMembers.some(bm => bm.id === u.id));
+
     return (
         <div className="flex flex-col h-screen overflow-hidden">
 
             {/* Board Layout */}
             <div className="flex-1 overflow-x-auto p-6 md:p-10 flex justify-start items-start">
-                <h1 className="text-2xl mt-10 mr-7 md:text-3xl font-bold tracking-wider uppercase drop-shadow-md [writing-mode:vertical-rl]" style={{ color: 'var(--color-text)' }}>
-                    {boardName}
-                </h1>
+                <div className="flex flex-col h-full">
+                    {/* Header Section with Members */}
+                    <div className="flex items-end justify-between mb-2 w-full min-w-max z-50">
+                        <div className="flex items-center gap-8">
+                            <h1 className="text-2xl md:text-3xl font-bold tracking-wider uppercase drop-shadow-md" style={{ color: 'var(--color-text)' }}>
+                                {boardName}
+                            </h1>
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCorners}
-                    onDragStart={onDragStart}
-                    onDragOver={onDragOver}
-                    onDragEnd={onDragEnd}
-                >
-                    <div className="flex min-w-full lg:min-w-0">
-                        <div className="flex flex-wrap justify-start gap-6">
-                            {columns.length > 0 ? (
-                                <>
-                                    {columns.map((col, index) => (
-                                        <Column
-                                            key={col.id}
-                                            id={col.id}
-                                            title={col.name}
-                                            index={index}
-                                            tasks={projects.filter((p) => p.column_id === col.id)}
-                                            onEditTask={handleEditProject}
-                                            onAddTask={addNewProject}
-                                            onDeleteColumn={deleteColumn}
-                                            onRenameColumn={renameColumn}
-                                            onDeleteProject={deleteProject}
-                                        />
+                            {/* Board Members Widget */}
+                            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white/20 shadow-sm">
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Team ({boardMembers.length})</span>
+                                <div className="flex -space-x-2">
+                                    {boardMembers.slice(0, 5).map((member, i) => (
+                                        <div key={i} title={member.name} className="w-8 h-8 rounded-full border-2 border-white bg-cyan-100 flex items-center justify-center text-xs font-bold text-cyan-700 shadow-sm relative group cursor-pointer">
+                                            {member.image ? (
+                                                <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover" />
+                                            ) : (
+                                                member.name.charAt(0).toUpperCase()
+                                            )}
+                                            {/* Remove Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemoveMember(member.id);
+                                                }}
+                                                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                                                title="Remove member"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
                                     ))}
-                                    <AddColumnForm onAdd={addNewColumn} />
-                                </>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center w-full py-20 border-4 border-dashed rounded-3xl backdrop-blur-sm" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
-                                    <div className="p-6 rounded-full mb-6" style={{ backgroundColor: 'var(--color-primary)20' }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--color-primary)' }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Empty Board</h3>
-                                    <p className="mb-8 max-w-xs text-center font-medium" style={{ color: 'var(--color-textSecondary)' }}>Create your first column to start organizing your projects.</p>
-                                    <AddColumnForm onAdd={addNewColumn} isInitial />
+                                    {boardMembers.length > 5 && (
+                                        <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shadow-sm z-10">
+                                            +{boardMembers.length - 5}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+
+                                {/* Add Member Button */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsAddMemberOpen(!isAddMemberOpen)}
+                                        className="w-8 h-8 rounded-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
+                                        title="Add Member to Board"
+                                    >
+                                        <span className="text-lg font-bold leading-none mb-0.5">+</span>
+                                    </button>
+
+                                    {/* Add Member Dropdown */}
+                                    {isAddMemberOpen && (
+                                        <div className="absolute top-10 left-0 w-64 bg-white rounded-xl  shadow-xl border border-gray-100 p-2 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="p-2 border-b border-gray-100 mb-1">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase">Add Board Member</h4>
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-1 ">
+                                                {notMemberUsers.length > 0 ? notMemberUsers.map(user => (
+                                                    <button
+                                                        key={user.id}
+                                                        onClick={() => handleAddMember(user.id)}
+                                                        className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
+                                                            {user.image ? <img src={user.image} className="w-full h-full rounded-full object-cover" /> : user.name.charAt(0)}
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-700 truncate">{user.name}</span>
+                                                    </button>
+                                                )) : (
+                                                    <p className="text-xs text-gray-400 p-2 text-center italic">No new users to add.</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <DragOverlay dropAnimation={dropAnimation}>
-                        {activeProject ? <ProjectCard id={activeProject.id} project={activeProject} onEdit={() => { }} onDelete={() => { }} /> : null}
-                    </DragOverlay>
-                </DndContext>
+
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCorners}
+                        onDragStart={onDragStart}
+                        onDragOver={onDragOver}
+                        onDragEnd={onDragEnd}
+                    >
+                        <div className="flex min-w-full lg:min-w-0 ">
+                            <div className="flex flex-wrap justify-start gap-6">
+                                {columns.length > 0 ? (
+                                    <>
+                                        {columns.map((col, index) => (
+                                            <Column
+                                                key={col.id}
+                                                id={col.id}
+                                                title={col.name}
+                                                index={index}
+                                                tasks={projects.filter((p) => p.column_id === col.id)}
+                                                onEditTask={handleEditProject}
+                                                onAddTask={addNewProject}
+                                                onDeleteColumn={deleteColumn}
+                                                onRenameColumn={renameColumn}
+                                                onDeleteProject={deleteProject}
+                                            />
+                                        ))}
+                                        <AddColumnForm onAdd={addNewColumn} />
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center w-full py-20 border-4 border-dashed rounded-3xl backdrop-blur-sm" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+                                        <div className="p-6 rounded-full mb-6" style={{ backgroundColor: 'var(--color-primary)20' }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--color-primary)' }}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Empty Board</h3>
+                                        <p className="mb-8 max-w-xs text-center font-medium" style={{ color: 'var(--color-textSecondary)' }}>Create your first column to start organizing your projects.</p>
+                                        <AddColumnForm onAdd={addNewColumn} isInitial />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <DragOverlay dropAnimation={dropAnimation}>
+                            {activeProject ? <ProjectCard id={activeProject.id} project={activeProject} onEdit={() => { }} onDelete={() => { }} /> : null}
+                        </DragOverlay>
+                    </DndContext>
+                </div>
             </div>
         </div>
     );
