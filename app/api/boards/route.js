@@ -18,7 +18,7 @@ export async function GET() {
       LEFT JOIN kanban_columns c ON b.id = c.board_id
       LEFT JOIN tasks t ON c.id = t.column_id
       WHERE 
-        bm.role = 'owner' 
+        bm.user_id IS NOT NULL 
         OR 
         t.members LIKE ?
       ORDER BY b.created_at DESC

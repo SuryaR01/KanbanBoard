@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { safeParseJSON } from '@/lib/utils';
 import {
     DndContext,
     DragOverlay,
@@ -401,10 +402,25 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     if (isLoading) return <div className="p-10 text-center font-bold" style={{ color: 'var(--color-text)' }}>Loading Board...</div>;
 
-    const notMemberUsers = allUsers.filter(u => !boardMembers.some(bm => bm.id === u.id));
+    // Calculate stats
+    const workingMemberIds = new Set<string>();
+    projects.forEach(p => {
+        const members = safeParseJSON(p.members);
+        if (Array.isArray(members)) {
+            members.forEach((m: any) => {
+                const id = typeof m === 'object' ? m.id : m;
+                workingMemberIds.add(String(id));
+            });
+        }
+    });
+
+    const notMemberUsers = allUsers.filter(u => !boardMembers.some(bm => bm.id === u.id) && !workingMemberIds.has(String(u.id)));
+
+    const workingCount = workingMemberIds.size;
+    const availableCount = notMemberUsers.length;
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex flex-col h-screen overflow-hidden z-20">
 
             {/* Board Layout */}
             <div className="flex-1 overflow-x-auto p-6 md:p-10 flex justify-start items-start">
@@ -417,11 +433,12 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                             </h1>
 
                             {/* Board Members Widget */}
-                            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white/20 shadow-sm">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Team ({boardMembers.length})</span>
+                            {/* Board Members Section */}
+                            <div className="flex items-center gap-6">
+                                {/* Avatars List */}
                                 <div className="flex -space-x-2">
                                     {boardMembers.slice(0, 5).map((member, i) => (
-                                        <div key={i} title={member.name} className="w-8 h-8 rounded-full border-2 border-white bg-cyan-100 flex items-center justify-center text-xs font-bold text-cyan-700 shadow-sm relative group cursor-pointer">
+                                        <div key={i} title={member.name} className="w-8 h-8 rounded-full border-2 border-white bg-cyan-100 flex items-center justify-center text-xs font-bold text-cyan-700 shadow-sm relative group cursor-pointer hover:border-cyan-200 transition-colors">
                                             {member.image ? (
                                                 <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover" />
                                             ) : (
@@ -447,23 +464,29 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                                     )}
                                 </div>
 
-                                {/* Add Member Button */}
+                                {/* Stats & Add Button (Pill Design) */}
                                 <div className="relative">
-                                    <button
-                                        onClick={() => setIsAddMemberOpen(!isAddMemberOpen)}
-                                        className="w-8 h-8 rounded-full bg-cyan-600 hover:bg-cyan-700 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
-                                        title="Add Member to Board"
-                                    >
-                                        <span className="text-lg font-bold leading-none mb-0.5">+</span>
-                                    </button>
+                                    <div className="flex items-center gap-4 bg-white px-6 py-2 rounded-3xl shadow-sm border border-gray-100">
+                                        <div className="flex flex-col items-end mr-1">
+                                            <span className="text-xs font-black text-gray-800 uppercase tracking-widest leading-none mb-1">Working: {workingCount}</span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Available: {availableCount}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsAddMemberOpen(!isAddMemberOpen)}
+                                            className="w-9 h-9 rounded-full bg-[#0891b2] hover:bg-[#0e7490] text-white flex items-center justify-center transition-all shadow-md active:scale-95"
+                                            title="Add Member to Board"
+                                        >
+                                            <span className="text-xl font-bold pb-0.5">+</span>
+                                        </button>
+                                    </div>
 
-                                    {/* Add Member Dropdown */}
+
                                     {isAddMemberOpen && (
-                                        <div className="absolute top-10 left-0 w-64 bg-white rounded-xl  shadow-xl border border-gray-100 p-2 animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 p-2 animate-in fade-in zoom-in-95 duration-200 z-50">
                                             <div className="p-2 border-b border-gray-100 mb-1">
-                                                <h4 className="text-xs font-bold text-gray-400 uppercase">Add Board Member</h4>
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase">Add Board Member ({notMemberUsers.length})</h4>
                                             </div>
-                                            <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-1 ">
+                                            <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-1">
                                                 {notMemberUsers.length > 0 ? notMemberUsers.map(user => (
                                                     <button
                                                         key={user.id}
@@ -494,8 +517,8 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                         onDragOver={onDragOver}
                         onDragEnd={onDragEnd}
                     >
-                        <div className="flex min-w-full lg:min-w-0 ">
-                            <div className="flex flex-wrap justify-start gap-6">
+                        <div className="flex min-w-full lg:min-w-0  ">
+                            <div className="flex flex-wrap justify-center items-center gap-8">
                                 {columns.length > 0 ? (
                                     <>
                                         {columns.map((col, index) => (
@@ -510,6 +533,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                                                 onDeleteColumn={deleteColumn}
                                                 onRenameColumn={renameColumn}
                                                 onDeleteProject={deleteProject}
+                                                boardMembers={boardMembers}
                                             />
                                         ))}
                                         <AddColumnForm onAdd={addNewColumn} />
@@ -530,7 +554,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                         </div>
 
                         <DragOverlay dropAnimation={dropAnimation}>
-                            {activeProject ? <ProjectCard id={activeProject.id} project={activeProject} onEdit={() => { }} onDelete={() => { }} /> : null}
+                            {activeProject ? <ProjectCard id={activeProject.id} project={activeProject} onEdit={() => { }} onDelete={() => { }} boardMembers={boardMembers} /> : null}
                         </DragOverlay>
                     </DndContext>
                 </div>

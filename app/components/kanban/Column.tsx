@@ -15,10 +15,11 @@ interface ColumnProps {
     onDeleteColumn: (columnId: number) => void;
     onRenameColumn: (columnId: number, newTitle: string) => void;
     onDeleteProject: (id: number) => void;
+    boardMembers: any[];
     index: number;
 }
 
-export function Column({ id, title, tasks, onEditTask, onAddTask, onDeleteColumn, onRenameColumn, onDeleteProject, index }: ColumnProps) {
+export function Column({ id, title, tasks, onEditTask, onAddTask, onDeleteColumn, onRenameColumn, onDeleteProject, boardMembers, index }: ColumnProps) {
     const { theme } = useTheme();
     const [isAdding, setIsAdding] = React.useState(false);
     const [newTaskTitle, setNewTaskTitle] = React.useState("");
@@ -86,7 +87,7 @@ export function Column({ id, title, tasks, onEditTask, onAddTask, onDeleteColumn
     };
 
     return (
-        <div className="flex flex-col w-72 min-h-[500px] rounded-2xl p-4 mr-6 last:mr-0 shadow-sm" style={{ backgroundColor: `var(--color-columnColors-${columnColorIndex})`, borderColor: 'var(--color-border)', borderWidth: '1px' }}>
+        <div className="flex flex-col w-72 mb-6 min-h-[500px] rounded-2xl p-4 mr-6 last:mr-0 shadow-sm" style={{ backgroundColor: `var(--color-columnColors-${columnColorIndex})`, borderColor: 'var(--color-border)', borderWidth: '1px' }}>
             <div className="flex items-center justify-between mb-6 group/column">
                 <div className="flex items-center flex-1">
                     <span className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-2 shrink-0" style={{ backgroundColor: 'var(--color-text)', color: 'var(--color-surface)' }}>
@@ -122,7 +123,7 @@ export function Column({ id, title, tasks, onEditTask, onAddTask, onDeleteColumn
                     <button
                         onClick={() => setShowMenu(!showMenu)}
                         className="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors"
-                        // style={{ color: 'var(--color-textSecondary)' }}
+                    // style={{ color: 'var(--color-textSecondary)' }}
                     >
                         <MoreVertical size={16} />
                     </button>
@@ -178,7 +179,7 @@ export function Column({ id, title, tasks, onEditTask, onAddTask, onDeleteColumn
             <div ref={setNodeRef} className="flex-1 overflow-y-auto min-h-[100px]">
                 <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                     {tasks.map((task) => (
-                        <ProjectCard key={task.id} id={task.id} project={task} onEdit={onEditTask} onDelete={onDeleteProject} />
+                        <ProjectCard key={task.id} id={task.id} project={task} onEdit={onEditTask} onDelete={onDeleteProject} boardMembers={boardMembers} />
                     ))}
                 </SortableContext>
 

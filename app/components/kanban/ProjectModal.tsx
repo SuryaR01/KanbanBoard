@@ -142,13 +142,13 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
     const progress = subtasks.length > 0 ? (completedCount / subtasks.length) * 100 : 0;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[100] mt-18 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col" style={{ backgroundColor: 'var(--color-surface)' }}>
 
                 {/* Header */}
-                <div className="p-6 flex justify-between items-center border-b border-gray-100 bg-gray-50/50 shrink-0">
+                <div className="p-6 flex justify-between items-center border-b shrink-0" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-background)' }}>
                     <div className="flex items-center gap-4">
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs font-black uppercase tracking-widest px-2 py-1 rounded" style={{ color: 'var(--color-textSecondary)', backgroundColor: 'var(--color-surface)' }}>
                             {isEditing ? 'Editing' : 'Viewing'} Project
                         </span>
                         {!isEditing && (
@@ -173,13 +173,13 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                         <div className="grid grid-cols-12 h-full">
 
                             {/* LEFT SIDE: Main Content (Scrollable) */}
-                            <div className="col-span-12 md:col-span-8 p-8 overflow-y-auto custom-scrollbar border-r border-gray-100">
-                                <h2 className="text-4xl font-extrabold text-gray-800 mb-6 leading-tight">{title}</h2>
+                            <div className="col-span-12 md:col-span-8 p-8 overflow-y-auto custom-scrollbar border-r" style={{ borderColor: 'var(--color-border)' }}>
+                                <h2 className="text-4xl font-extrabold mb-6 leading-tight" style={{ color: 'var(--color-text)' }}>{title}</h2>
 
                                 <div className="space-y-8">
                                     {/* Description */}
-                                    <div className="text-gray-600 max-w-none">
-                                        <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <div className="max-w-none" style={{ color: 'var(--color-textSecondary)' }}>
+                                        <h4 className="text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: 'var(--color-textSecondary)' }}>
                                             <Type size={14} /> Description
                                         </h4>
                                         {description ? (
@@ -198,7 +198,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                             <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                                         </div>
 
-                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2">
+                                        <div className="rounded-xl p-4 border space-y-2" style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
                                             {subtasks.map((task) => (
                                                 <div key={task.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200 hover:shadow-sm">
                                                     <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${task.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
@@ -235,7 +235,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                             </div>
 
                             {/* RIGHT SIDE: Metadata (Sidebar) */}
-                            <div className="col-span-12 md:col-span-4 bg-gray-50/50 p-8 overflow-y-auto custom-scrollbar h-full border-l border-gray-50">
+                            <div className="col-span-12 md:col-span-4 p-8 overflow-y-auto custom-scrollbar h-full border-l" style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
                                 <div className="space-y-8">
 
                                     {/* Status / Labels */}
@@ -252,7 +252,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                         </div>
                                     </section>
 
-                                    
+
 
                                     {/* Dates */}
                                     <section>
@@ -313,9 +313,10 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                 {/* Left Column: Inputs */}
                                 <div className="space-y-8">
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Title</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Title</label>
                                         <input
-                                            className="w-full text-lg font-bold text-gray-800 border-b-2 border-gray-200 focus:border-cyan-500 outline-none p-2 transition-colors bg-transparent"
+                                            className="w-full text-lg font-bold border-b-2 outline-none p-2 transition-colors bg-transparent"
+                                            style={{ color: 'var(--color-text)', borderColor: 'var(--color-border)' }}
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
                                             placeholder="Project Title"
@@ -323,9 +324,10 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                     </section>
 
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Description</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Description</label>
                                         <textarea
-                                            className="w-full text-sm text-gray-600 bg-gray-50 border border-transparent focus:border-cyan-500 rounded-xl outline-none p-3 min-h-[120px] resize-none"
+                                            className="w-full text-sm border rounded-xl outline-none p-3 min-h-[120px] resize-none"
+                                            style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-textSecondary)', borderColor: 'var(--color-border)' }}
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Detailed description..."
@@ -333,7 +335,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                     </section>
 
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Manage Subtasks</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Manage Subtasks</label>
                                         <div className="space-y-2 mb-3">
                                             {subtasks.map((task) => (
                                                 <div key={task.id} className="flex items-center gap-2">
@@ -347,6 +349,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                                         value={task.text}
                                                         onChange={(e) => setSubtasks(subtasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
                                                         className="flex-1 text-sm bg-transparent border-b border-transparent focus:border-gray-300 outline-none"
+                                                        style={{ color: 'var(--color-text)' }}
                                                     />
                                                     <button onClick={() => removeSubtask(task.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
                                                 </div>
@@ -354,7 +357,8 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                         </div>
                                         <div className="flex gap-2">
                                             <input
-                                                className="flex-1 text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-cyan-500"
+                                                className="flex-1 text-sm p-2 border rounded-lg outline-none"
+                                                style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                                                 placeholder="New subtask..."
                                                 value={newSubtask}
                                                 onChange={(e) => setNewSubtask(e.target.value)}
@@ -368,7 +372,7 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                 {/* Right Column: Meta Inputs */}
                                 <div className="space-y-8">
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Labels</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Labels</label>
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {labels.map((label, i) => (
                                                 <span key={i} style={{ backgroundColor: label.color }} className="px-2 py-1 rounded-md text-white text-xs font-bold flex items-center gap-1">
@@ -389,7 +393,8 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                         </div>
                                         <div className="flex gap-2">
                                             <input
-                                                className="flex-1 text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg"
+                                                className="flex-1 text-sm p-2 border rounded-lg"
+                                                style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                                                 placeholder="New Label..."
                                                 value={newLabel}
                                                 onChange={(e) => setNewLabel(e.target.value)}
@@ -400,17 +405,18 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                     </section>
 
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Due Date</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Due Date</label>
                                         <input
                                             type="date"
-                                            className="w-full text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg"
+                                            className="w-full text-sm p-2 border rounded-lg"
+                                            style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                                             value={dueDate}
                                             onChange={(e) => setDueDate(e.target.value)}
                                         />
                                     </section>
 
                                     <section>
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Members</label>
+                                        <label className="text-xs font-black uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-textSecondary)' }}>Members</label>
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {members.map((member, i) => {
                                                 const isObject = typeof member === 'object' && member !== null;
@@ -424,7 +430,8 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
                                             })}
                                         </div>
                                         <select
-                                            className="w-full text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg"
+                                            className="w-full text-sm p-2 border rounded-lg"
+                                            style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                                             value={selectedUser}
                                             onChange={(e) => { setSelectedUser(e.target.value); addMember(e.target.value); }}
                                         >
@@ -442,10 +449,11 @@ export function ProjectModal({ project, isOpen, onClose, onUpdate }: ProjectModa
 
                 {/* Footer Buttons (Edit Mode Only) */}
                 {isEditing && (
-                    <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 animate-in slide-in-from-bottom-2">
+                    <div className="p-6 border-t flex justify-end gap-3 animate-in slide-in-from-bottom-2" style={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
                         <button
                             onClick={() => setIsEditing(false)}
-                            className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 uppercase transition-colors"
+                            className="px-6 py-2.5 text-sm font-bold uppercase transition-colors hover:opacity-80"
+                            style={{ color: 'var(--color-textSecondary)' }}
                         >
                             Cancel Edit
                         </button>

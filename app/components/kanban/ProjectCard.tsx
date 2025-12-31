@@ -25,9 +25,10 @@ interface ProjectCardProps {
     project: Project;
     onEdit: (project: Project) => void;
     onDelete: (id: number) => void;
+    boardMembers: any[];
 }
 
-export function ProjectCard({ id, project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ id, project, onEdit, onDelete, boardMembers }: ProjectCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editValue, setEditValue] = useState(project.title);
@@ -141,6 +142,35 @@ export function ProjectCard({ id, project, onEdit, onDelete }: ProjectCardProps)
     const members = safeParseJSON(project.members);
     const completedSubtasks = Array.isArray(subtasks) ? subtasks.filter((s: any) => s.completed).length : 0;
 
+    // Filter board members who are not in the card members list
+    const cardMemberIds = new Set(members.map((m: any) => typeof m === 'object' ? m.id : m));
+    const notCardMembers = boardMembers.filter(bm => !cardMemberIds.has(bm.id));
+
+    const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+    const addMemberRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (addMemberRef.current && !addMemberRef.current.contains(event.target as Node)) {
+                setIsAddMemberOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleAddMemberToCard = (member: any) => {
+        const newMember = { id: member.id, name: member.name, image: member.image };
+        const updatedMembers = [...members, newMember];
+        onEdit({ ...project, members: JSON.stringify(updatedMembers) });
+        setIsAddMemberOpen(false);
+    };
+
+    const handleRemoveMemberFromCard = (memberId: string) => {
+        const updatedMembers = members.filter((m: any) => (typeof m === 'object' ? m.id : m) !== memberId);
+        onEdit({ ...project, members: JSON.stringify(updatedMembers) });
+    };
+
     const handleToggleSubtask = (e: React.MouseEvent, subtaskId: string) => {
         e.stopPropagation();
         const updatedSubtasks = subtasks.map((s: any) =>
@@ -215,32 +245,43 @@ export function ProjectCard({ id, project, onEdit, onDelete }: ProjectCardProps)
                         {project.title}
                     </p>
 
+                  
                     {/* Basic Footer (Always Visible/Collapsed) */}
-                    <div className="flex items-center justify-between mt-1">
-                        {/* Members Avatars */}
-                        <div className="flex -space-x-1.5">
-                            {members.slice(0, 3).map((m: any, i: number) => {
-                                const isObject = typeof m === 'object' && m !== null;
-                                const name = isObject ? m.name : String(m);
-                                const initial = name.length > 0 ? name.charAt(0).toUpperCase() : '?';
-                                return (
-                                    <div key={i} className="w-5 h-5 rounded-full bg-cyan-100 border border-white flex items-center justify-center text-[8px] font-bold text-cyan-700 shadow-sm" title={name}>
-                                        {initial}
+                    <div className="flex items-center justify-between mt-3">
+                        {/* Members Avatars & Add Button */}
+                        <div className="flex items-center gap-1">
+                            <div className="flex -space-x-1.5">
+                                {members.slice(0, 4).map((m: any, i: number) => {
+                                    const isObject = typeof m === 'object' && m !== null;
+                                    const name = isObject ? m.name : String(m);
+                                    const mid = isObject ? m.id : String(m);
+                                    const initial = name.length > 0 ? name.charAt(0).toUpperCase() : '?';
+                                    return (
+                                        <div key={i} className="group/member w-5 h-5 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[8px] font-bold text-cyan-700 shadow-sm relative cursor-pointer hover:border-cyan-200 hover:z-10 transition-all" title={name}>
+                                            {initial}
+                                            <button
+                                                className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[6px] opacity-0 group-hover/member:opacity-100 transition-opacity shadow-sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemoveMemberFromCard(mid);
+                                                }}
+                                            >✕</button>
+                                        </div>
+                                    )
+                                })}
+                                {members.length > 4 && (
+                                    <div className="w-5 h-5 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-[8px] font-bold text-gray-400 shadow-sm">
+                                        +{members.length - 4}
                                     </div>
-                                )
-                            })}
-                            {members.length > 3 && (
-                                <div className="w-5 h-5 rounded-full bg-gray-100 border border-white flex items-center justify-center text-[8px] font-bold text-gray-500 shadow-sm">
-                                    +{members.length - 3}
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
 
-                        {/* Icons Summary */}
-                        <div className="flex items-center gap-2 text-gray-400">
-                            {project.due_date && <Calendar size={12} />}
+                        {/* Date & Tasks */}
+                        <div className="flex items-center gap-2 text-gray-300">
+                            {project.due_date && <Calendar size={12} className="text-gray-400" />}
                             {subtasks.length > 0 && (
-                                <div className="flex items-center gap-0.5 text-[10px] font-medium">
+                                <div className="flex items-center gap-0.5 text-[10px] font-bold text-gray-400">
                                     <CheckSquare size={12} />
                                     <span>{completedSubtasks}/{subtasks.length}</span>
                                 </div>
@@ -248,48 +289,7 @@ export function ProjectCard({ id, project, onEdit, onDelete }: ProjectCardProps)
                         </div>
                     </div>
 
-                    {/* EXPANDED DETAILS (Hover Only) - Smooth Animation */}
-                    <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-[500px] group-hover:opacity-100 transition-all duration-700 ease-in-out">
-                        <div className="pt-3 mt-1 border-t border-dashed border-gray-200 space-y-3">
 
-                            {/* Description */}
-                            {project.description && (
-                                <p className="text-xs text-gray-600 line-clamp-3">
-                                    {project.description}
-                                </p>
-                            )}
-
-                            {/* Full Labels */}
-                            {labels.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                    {labels.map((label: any, i: number) => (
-                                        <span key={i} style={{ backgroundColor: label.color }} className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white uppercase">{label.text}</span>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Full Subtasks */}
-                            {subtasks.length > 0 && (
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-bold text-gray-400 uppercase">Subtasks</p>
-                                    {subtasks.map((task: any) => (
-                                        <div key={task.id} className="flex items-center gap-1.5">
-                                            <div className={`w-2.5 h-2.5 rounded border flex items-center justify-center ${task.completed ? 'bg-cyan-500 border-cyan-500' : 'border-gray-300'}`}>
-                                                {task.completed && <CheckSquare size={6} className="text-white" />}
-                                            </div>
-                                            <span className={`text-[10px] ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>{task.text}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Meta Data */}
-                            <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-mono pt-2 border-t border-gray-50">
-                                <div>ID: {id}</div>
-                                <div>Created: {project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</div>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
 
