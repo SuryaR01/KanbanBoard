@@ -12,7 +12,9 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    
   },
+  basePath:process.env.VITE_BASE_PATH || '/SuryaR01/KanbanBoard'
 };
 
 export default nextConfig;

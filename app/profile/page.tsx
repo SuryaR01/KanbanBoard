@@ -5,6 +5,13 @@ import { useState, useEffect } from "react";
 import { FiUser, FiMail, FiSave, FiCamera } from "react-icons/fi";
 import toast from "react-hot-toast";
 
+interface CustomUser {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: string;
+}
+
 export default function ProfilePage() {
     const { data: session, update } = useSession();
     const [name, setName] = useState("");
@@ -33,7 +40,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (!session) {
+    if (!session || !session.user) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--color-background)" }}>
                 <p style={{ color: "var(--color-text)" }}>Please login to view your profile.</p>
@@ -76,7 +83,7 @@ export default function ProfilePage() {
 
                         <div className="text-center md:text-left">
                             <h2 className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>{session.user.name}</h2>
-                            <p className="font-medium opacity-70" style={{ color: "var(--color-textSecondary)" }}>{session.user.role || "Member"}</p>
+                            <p className="font-medium opacity-70" style={{ color: "var(--color-textSecondary)" }}>{(session.user as CustomUser).role || "Member"}</p>
                         </div>
                     </div>
 

@@ -47,6 +47,19 @@ export function ProjectCard({ id, project, onEdit, onDelete, boardMembers }: Pro
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+    const addMemberRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (addMemberRef.current && !addMemberRef.current.contains(event.target as Node)) {
+                setIsAddMemberOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const {
         attributes,
         listeners,
@@ -146,19 +159,6 @@ export function ProjectCard({ id, project, onEdit, onDelete, boardMembers }: Pro
     const cardMemberIds = new Set(members.map((m: any) => typeof m === 'object' ? m.id : m));
     const notCardMembers = boardMembers.filter(bm => !cardMemberIds.has(bm.id));
 
-    const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-    const addMemberRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (addMemberRef.current && !addMemberRef.current.contains(event.target as Node)) {
-                setIsAddMemberOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
     const handleAddMemberToCard = (member: any) => {
         const newMember = { id: member.id, name: member.name, image: member.image };
         const updatedMembers = [...members, newMember];
@@ -245,8 +245,8 @@ export function ProjectCard({ id, project, onEdit, onDelete, boardMembers }: Pro
                         {project.title}
                     </p>
 
-                  
-                    {/* Basic Footer (Always Visible/Collapsed) */}
+
+
                     <div className="flex items-center justify-between mt-3">
                         {/* Members Avatars & Add Button */}
                         <div className="flex items-center gap-1">

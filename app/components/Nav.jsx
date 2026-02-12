@@ -26,12 +26,12 @@ export default function Navbar() {
     <nav
       className="w-full py-3 px-6 md:px-12 flex justify-between items-center sticky bg-transparent top-0 z-50 backdrop-blur-md transition-all duration-300"
       style={{
-        // backgroundColor: "var(--color-surface)",
+       
         borderBottom: "1px solid var(--color-border)",
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
       }}
     >
-      {/* Logo Area */}
+      
       <Link href="/" className="flex items-center gap-2 group">
         <div 
           className="p-2 rounded-xl transition-all duration-300 group-hover:scale-110"

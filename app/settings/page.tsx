@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { FiMoon, FiSun, FiBell, FiMonitor, FiCheck } from "react-icons/fi";
-import { Switch } from "@headlessui/react"; // If headlessui is not installed, I will implement a custom switch or simple checkbox. 
-// I'll check package.json or just build a simple custom switch since I don't want to assume deps.
-// Actually I'll implement a custom switch using standard div/button to avoid dependency issues.
+
 
 export default function SettingsPage() {
     const { currentTheme, changeTheme, themes } = useTheme();
