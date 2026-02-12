@@ -8,6 +8,8 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
+const BASE_PATH = "";
+
 export default function BoardDetailPage() {
     const { id } = useParams();
     const router = useRouter();
@@ -25,7 +27,7 @@ export default function BoardDetailPage() {
 
     const fetchBoardDetails = async () => {
         try {
-            const res = await fetch(`/api/boards`);
+            const res = await fetch(`${BASE_PATH}/api/boards`);
             const boards = await res.json();
             const board = boards.find((b: any) => b.id === Number(id));
             if (board) {

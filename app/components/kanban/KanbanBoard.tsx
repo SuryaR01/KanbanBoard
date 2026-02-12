@@ -24,6 +24,8 @@ import { Column } from './Column';
 import { Project, ProjectCard } from './ProjectCard';
 import toast from 'react-hot-toast';
 
+const BASE_PATH = "";
+
 export interface KanbanColumn {
     id: number;
     board_id: number;
@@ -71,7 +73,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     useEffect(() => {
         // Fetch current user
-        fetch('/api/user/profile')
+        fetch(`${BASE_PATH}/api/user/profile`)
             .then(res => res.json())
             .then(data => {
                 if (data.user) setCurrentUser(data.user);
@@ -79,7 +81,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
             .catch(err => console.error("Failed to fetch user profile", err));
 
         // Fetch user list (for adding new members)
-        fetch('/api/users')
+        fetch(`${BASE_PATH}/api/users`)
             .then(res => res.json())
             .then(data => {
                 if (data.users) setAllUsers(data.users);
@@ -96,7 +98,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const fetchMembers = async () => {
         try {
-            const res = await fetch(`/api/boards/${boardId}/members`);
+            const res = await fetch(`${BASE_PATH}/api/boards/${boardId}/members`);
             if (res.ok) {
                 const data = await res.json();
                 setBoardMembers(Array.isArray(data) ? data : []);
@@ -108,7 +110,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const handleAddMember = async (userId: string) => {
         try {
-            const res = await fetch(`/api/boards/${boardId}/members`, {
+            const res = await fetch(`${BASE_PATH}/api/boards/${boardId}/members`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId }),
@@ -135,7 +137,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
         if (!confirm("Are you sure you want to remove this member?")) return;
 
         try {
-            const res = await fetch(`/api/boards/${boardId}/members`, {
+            const res = await fetch(`${BASE_PATH}/api/boards/${boardId}/members`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId }),
@@ -156,8 +158,8 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
         try {
             setIsLoading(true);
             const [colsRes, tasksRes] = await Promise.all([
-                fetch(`/api/columns?boardId=${boardId}`),
-                fetch(`/api/tasks?boardId=${boardId}`)
+                fetch(`${BASE_PATH}/api/columns?boardId=${boardId}`),
+                fetch(`${BASE_PATH}/api/tasks?boardId=${boardId}`)
             ]);
 
             if (colsRes.ok && tasksRes.ok) {
@@ -247,7 +249,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                     ? (over.data.current.project as Project).column_id
                     : overId as number;
 
-                await fetch(`/api/tasks/${activeId}`, {
+                await fetch(`${BASE_PATH}/api/tasks/${activeId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -265,7 +267,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const addNewColumn = async (name: string) => {
         try {
-            const res = await fetch('/api/columns', {
+            const res = await fetch(`${BASE_PATH}/api/columns`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -290,7 +292,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
         if (!confirm('Are you sure you want to delete this column and all its projects?')) return;
 
         try {
-            const res = await fetch(`/api/columns/${columnId}`, {
+            const res = await fetch(`${BASE_PATH}/api/columns/${columnId}`, {
                 method: 'DELETE',
             });
             if (res.ok) {
@@ -307,7 +309,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const renameColumn = async (columnId: number, newName: string) => {
         try {
-            const res = await fetch(`/api/columns/${columnId}`, {
+            const res = await fetch(`${BASE_PATH}/api/columns/${columnId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newName }),
@@ -336,7 +338,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
                 { id: currentUser.id, name: currentUser.name, image: currentUser.image }
             ];
 
-            const res = await fetch('/api/tasks', {
+            const res = await fetch(`${BASE_PATH}/api/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -361,7 +363,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const handleEditProject = async (updatedProject: Project) => {
         try {
-            const res = await fetch(`/api/tasks/${updatedProject.id}`, {
+            const res = await fetch(`${BASE_PATH}/api/tasks/${updatedProject.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -388,7 +390,7 @@ export default function KanbanBoard({ boardId, boardName }: KanbanBoardProps) {
 
     const deleteProject = async (id: number) => {
         try {
-            const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${BASE_PATH}/api/tasks/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setProjects(projects.filter(p => p.id !== id));
                 toast.success('Project deleted');

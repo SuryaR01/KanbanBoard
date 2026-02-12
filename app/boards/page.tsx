@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Plus, X, Layout } from "lucide-react";
 
+const BASE_PATH = "";
+
 interface Board {
     id: number;
     name: string;
@@ -32,7 +34,7 @@ export default function BoardsPage() {
 
     const fetchBoards = async () => {
         try {
-            const res = await fetch("/api/boards");
+            const res = await fetch(`${BASE_PATH}/api/boards`);
             const data = await res.json();
             setBoards(Array.isArray(data) ? data : []);
         } catch (error) {
@@ -47,7 +49,7 @@ export default function BoardsPage() {
         if (!newBoardName.trim()) return;
 
         try {
-            const res = await fetch("/api/boards", {
+            const res = await fetch(`${BASE_PATH}/api/boards`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: newBoardName }),
@@ -81,7 +83,7 @@ export default function BoardsPage() {
         }
 
         try {
-            const res = await fetch(`/api/boards/${id}`, { method: "DELETE" });
+            const res = await fetch(`${BASE_PATH}/api/boards/${id}`, { method: "DELETE" });
             if (res.ok) {
                 setBoards(boards.filter(b => b.id !== id));
                 setConfirmingBoardId(null);
